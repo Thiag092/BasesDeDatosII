@@ -1,0 +1,39 @@
+PUNTO 3)
+
+CREATE TABLE Pedidos (
+	Nro_Orden INT NOT NULL UNIQUE,
+	Fecha_Orden DATETIME DEFAULT GETDATE(),
+	CUIT_Cliente CHAR(11) NOT NULL,
+	CUIT_Proveedor CHAR(11),
+	Nro_Producto INT,
+	Tipo_Pedido CHAR(1) CHECK (Tipo_Pedido IN ('M', 'C', 'G', 'H', 'N'),
+	Cantidad_Pedida INT CHECK (Cantidad_Pedida > 0),
+	CONSTRAINT PK_Pedidos PRIMARY KEY (Nro_Orden, CUIT_Cliente),
+	CONSTRAINT FK_Cliente FOREIGN KEY (CUIT_Cliente) REFERENCES Clientes (Cuit)
+);
+
+CREATE TRIGGER Control_pedido
+BEFORE INSERT ON Pedidos
+FOR EACH ROW
+	BEGIN
+	IF NEW.Cantidad_Pedida > (SELECT stock_actual FROM Stock_productos WHERE nro_producto = NEW.Nro_Producto)
+	THEN
+		 ROLLBACK TRANSACTION;
+       		 THROW 50001, 'La cantidad pedida supera el stock disponible', 1;
+	ELSE:
+		UPDATE Stock_productos 
+		SET stock_actual = stock_actual - NEW.Cantidad_pedida
+		WHERE nro_producto = NEW.Nro_Producto;
+	ENDIF;
+	END;
+
+PUNTO 4)
+
+ALTER TABLE Pedidos ADD CONSTRAINT ClaveProducto FOREIGN KEY (Nro_Producto, Tipo_Pedido) REFERENCES Productos (nro_producto, tipo_pedido);
+
+ALTER TABLE Pedidos ADD CONSTRAINT CantidadPermitida CHECK (Cantidad_Pedida BETWEEN 10 AND 2000);
+
+ALTER TABLE Pedidos WITH NOCHECK ADD CONSTRAINT ControlCUIT CHECK (CUIT_Cliente <> CUIT_Proveedor);
+
+ALTER TABLE Stock_productos ADD CONSTRAINT ControlStock CHECK (stock_actual >= stock_minimo);
+
