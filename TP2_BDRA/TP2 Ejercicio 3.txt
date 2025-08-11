@@ -1,0 +1,36 @@
+3) 
+
+a) El tamaño de la primera relación es de 8.100.000 bytes (esto lo obtenemos de multiplicar 100.000 registros por 81 bytes que pesa cada uno). Por otra parte el tamaño de la segunda relación es de 11.292.600 bytes (63.800 registros * 177 bytes).
+
+b) 
+
+SELECT r.nombre_comercial, l.nombre 
+FROM Remedios r INNER JOIN Laboratorios l
+ON r.laboratorio = l.laboratorio;
+
+OBSERVACIÓN: El tamaño de la consulta será: (20 bytes + 40 bytes) * 100.000 tuplas = 6.000.000 bytes.
+
+I) 
+
+Si queremos tomar el NODO 3 como nodo resultado tenemos las siguientes alternativas:
+	
+- OPCION 1: Pasar la relación Remedios y la relación Laboratorios al NODO 3 y allí calcular la consulta. 
+En este caso estaríamos transfiriendo 19.392.600 bytes obtenidos de sumar los 8.100.000 bytes de la relación Remedios con los 11.292.600 bytes de la relación Laboratorios.
+
+- OPCION 2: Pasar la relación Remedios al NODO 2 y allí calcular la consulta para luego pasarla al NODO 3.
+En este caso primero pasamos 8.100.000 bytes y luego pasamos los 6.000.000 de bytes de la consulta. Obteniendo como resultado 14.100.000 bytes.
+
+- OPCION 3: Pasar la relación Laboratorios al NODO 1 y allí calcular la consulta para luego pasarla al NODO 3.
+En este caso primero pasamos 11.292.000 bytes y luego pasamos los 6.000.000 de bytes de la consulta. Obteniendo como resultado 17.292.000 bytes.
+
+Luego de analizar las 3 opciones podemos concluir que la más adecuada minimizar el transporte de bytes es la opción 2.
+
+II) Por otra parte si queremos alojar el resultado de la consulta en el NODO 2 tenemos las siguientes alternativas:
+
+- OPCION 1: Pasar la relación Remedios al NODO 2 y allí calcular la consulta.
+En este caso estaríamos pasando simplemente 8.100.000 bytes.
+
+- OPCION 2: Pasar la relación Laboratorios al NODO 1, calcular allí el resultado y pasarlo al NODO 2.
+En este caso estaríamos pasando 11.292.000 bytes + 6.000.000 bytes = 17.292.000 bytes.
+
+Luego de analizar ambas alternativas podemos concluir que la más adecuada para minimizar el transporte de bytes es la opción 1.
