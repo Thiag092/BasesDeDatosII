@@ -1,33 +1,59 @@
-PUNTO 3)
+-- PUNTO 3)
 
 CREATE TABLE Pedidos (
-	Nro_Orden INT NOT NULL UNIQUE,
+	Nro_Orden INT UNIQUE NOT NULL,
 	Fecha_Orden DATETIME DEFAULT GETDATE(),
 	CUIT_Cliente CHAR(11) NOT NULL,
 	CUIT_Proveedor CHAR(11),
 	Nro_Producto INT,
-	Tipo_Pedido CHAR(1) CHECK (Tipo_Pedido IN ('M', 'C', 'G', 'H', 'N'),
+	Tipo_Pedido CHAR(1) CHECK (Tipo_Pedido IN ('M', 'C', 'G', 'H', 'N')),
 	Cantidad_Pedida INT CHECK (Cantidad_Pedida > 0),
 	CONSTRAINT PK_Pedidos PRIMARY KEY (Nro_Orden, CUIT_Cliente),
 	CONSTRAINT FK_Cliente FOREIGN KEY (CUIT_Cliente) REFERENCES Clientes (Cuit)
 );
 
 CREATE TRIGGER Control_pedido
-BEFORE INSERT ON Pedidos
-FOR EACH ROW
-	BEGIN
-	IF NEW.Cantidad_Pedida > (SELECT stock_actual FROM Stock_productos WHERE nro_producto = NEW.Nro_Producto)
-	THEN
-		 ROLLBACK TRANSACTION;
-       		 THROW 50001, 'La cantidad pedida supera el stock disponible', 1;
-	ELSE:
-		UPDATE Stock_productos 
-		SET stock_actual = stock_actual - NEW.Cantidad_pedida
-		WHERE nro_producto = NEW.Nro_Producto;
-	ENDIF;
-	END;
+ON Pedidos
+INSTEAD OF INSERT 
+AS
+BEGIN
+    SET NOCOUNT ON;
 
-PUNTO 4)
+    IF EXISTS (
+        SELECT 1
+        FROM INSERTED i
+        JOIN Stock_productos s ON i.Nro_Producto = s.nro_producto
+        WHERE i.Cantidad_Pedida > s.stock_actual
+    )
+    BEGIN
+        THROW 50001, 'La cantidad pedida supera el stock disponible', 1;
+        RETURN;
+    END
+
+    UPDATE s
+    SET s.stock_actual = s.stock_actual - i.Cantidad_Pedida
+    FROM Stock_productos s
+    INNER JOIN INSERTED i ON s.nro_producto = i.Nro_Producto;
+
+    INSERT INTO Pedidos (
+        Nro_Orden,
+        CUIT_Cliente,
+        CUIT_Proveedor,
+        Nro_Producto,
+        Tipo_Pedido,
+        Cantidad_Pedida
+    )
+    SELECT
+        i.Nro_Orden,
+        i.CUIT_Cliente,
+        i.CUIT_Proveedor,
+        i.Nro_Producto,
+        i.Tipo_Pedido,
+        i.Cantidad_Pedida
+    FROM INSERTED i;
+END;
+
+-- PUNTO 4)
 
 ALTER TABLE Pedidos ADD CONSTRAINT ClaveProducto FOREIGN KEY (Nro_Producto, Tipo_Pedido) REFERENCES Productos (nro_producto, tipo_pedido);
 
