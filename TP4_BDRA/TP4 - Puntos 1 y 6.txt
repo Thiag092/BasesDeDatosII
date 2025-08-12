@@ -1,0 +1,47 @@
+-- PUNTO 1
+-- a)
+
+CREATE TABLE Libros (
+	cod_libro INTEGER
+	GENERATED ALWAYS AS IDENTITY (
+		START WITH 1
+		INCREMENT BY 1
+		MINVALUE 1
+		MAXVALUE 5000
+		NO CYCLE),
+	titulo VARCHAR (100),
+	autor VARCHAR (100),
+	anio_edicion INTEGER,
+	precio DECIMAL(8,2)
+);
+
+--b)
+	
+CREATE TABLE Editorial (
+	cod_libro INTEGER,
+	titulo VARCHAR(100),
+	descripcion CLOB(40k),
+	autor VARCHAR (100),
+	foto_portada BLOB(2M),
+	video_presentacion BLOB(1G),
+	anio_edicion INTEGER
+);
+
+-- PUNTO 6
+
+CREATE TYPE Producto AS (
+	cod_producto VARCHAR(20),
+	denominacion VARCHAR(40),
+	stock_actual INTEGER,
+	stock_min INTEGER,
+	precio_fabrica DECIMAL(10,2),
+	precio_consumidor DECIMAL(10,2),
+	METHOD precios() RETURNS DECIMAL(10,2)
+);
+
+CREATE METHOD precios() FOR Producto
+BEGIN
+	SELF.precio_consumidor = SELF.precio_fabrica * 1.15;
+	RETURN SELF.precio_consumidor;
+END;
+
