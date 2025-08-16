@@ -174,4 +174,4 @@ select count(*) from Cuotas_seguros -- igual a 0
 insert into Seguros_autos (nro_poliza, DNI, marca, anio_modelo, patente, nro_motor, periodo_pago, importe_pagar) VALUES 
 (1001, 12345678, 'Ford', 2022, 'ABC123', 123456, '202401', 3000.00);
 
-select * from Cuotas_seguros;
+select * from Cuotas_seguros; -- tres registros
