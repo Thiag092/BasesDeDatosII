@@ -1,0 +1,51 @@
+-- Punto 9
+
+CREATE TABLE Facturas (
+    id_factura INT AUTO_INCREMENT PRIMARY KEY,
+    cliente_factura INT,
+    importe_factura DECIMAL(10,2),
+    intereses DECIMAL(5,2)
+);
+
+-- Crear un nuevo thigger para recargo por factura fuera de término
+
+CREATE TRIGGER Importe_recargo
+BEFORE UPDATE ON Facturas
+FOR EACH ROW
+SET NEW.importe_factura = OLD.importe_factura + 
+                          (OLD.importe_factura * NEW.intereses / 100);
+-- Punto 10
+
+CREATE TABLE Cursadas (
+    dni INT PRIMARY KEY,
+    cod_carrera INT,
+    cod_materia INT,
+    año_cursado INT NOT NULL,
+    condicion CHAR(1) CHECK (condicion IN ('R','P','D')),
+    nota_final INT CHECK (nota_final BETWEEN 0 AND 10),
+    CONSTRAINT Control_Materia 
+        FOREIGN KEY (cod_carrera, cod_materia)
+        REFERENCES Plan_Carreras (cod_carrera, cod_materia)
+);
+
+-- Insertar
+CREATE TRIGGER Condicion_alumno_ins
+BEFORE INSERT ON Cursadas
+FOR EACH ROW
+SET NEW.condicion = 
+    CASE
+        WHEN NEW.nota_final = 6 THEN 'R'
+        WHEN NEW.nota_final >= 7 THEN 'P'
+        ELSE 'D'
+    END;
+
+-- Actualizar
+CREATE TRIGGER Condicion_alumno_upd
+BEFORE UPDATE ON Cursadas
+FOR EACH ROW
+SET NEW.condicion = 
+    CASE
+        WHEN NEW.nota_final = 6 THEN 'R'
+        WHEN NEW.nota_final >= 7 THEN 'P'
+        ELSE 'D'
+    END;
