@@ -1,0 +1,118 @@
+PUNTO 5:
+
+Regla:
+CREATE RULE Regla_CodigoCliente AS
+@valor > 0 AND @valor < 1000000000; -- hasta 9 dígitos
+--------------------------------------------------------------------
+
+
+2) Tabla Clientes
+CREATE TABLE Clientes (
+    codigo_cliente INT PRIMARY KEY
+        CHECK (codigo_cliente > 0 AND codigo_cliente < 1000000000),
+    nombre NVARCHAR(100) NOT NULL,
+    direccion NVARCHAR(200) NOT NULL,
+    codigo_postal INT NOT NULL,
+    importe_base DECIMAL(10,2) NOT NULL,
+    CONSTRAINT FK_Clientes_CodPostales
+        FOREIGN KEY (codigo_postal) REFERENCES CodPostales(cod_postal)
+);
+---------------------------------------------------------------
+
+
+
+3) Tabla Facturas
+CREATE TABLE Facturas (
+    nro_factura INT PRIMARY KEY,
+    fecha_factura DATE NOT NULL,
+    codigo_cliente INT NOT NULL,
+    tipo_descuento INT CHECK (tipo_descuento BETWEEN 5 AND 20),
+    valor_iva INT CHECK (valor_iva IN (15, 21)),
+    importe_factura DECIMAL(12,2) NOT NULL,
+    CONSTRAINT FK_Facturas_Clientes FOREIGN KEY (codigo_cliente)
+        REFERENCES Clientes(codigo_cliente)
+);
+--------------------------------------------------
+
+
+4) Trigger Calcular_importe_factura
+
+
+a) Trigger en Facturas (cuando se inserta):
+CREATE TRIGGER Calcular_importe_factura
+ON Facturas
+AFTER INSERT
+AS
+BEGIN
+    UPDATE f
+    SET importe_factura = 
+        (c.importe_base - (c.importe_base * i.tipo_descuento / 100.0))
+        * (1 + i.valor_iva / 100.0)
+    FROM Facturas f
+    INNER JOIN inserted i ON f.nro_factura = i.nro_factura
+    INNER JOIN Clientes c ON i.codigo_cliente = c.codigo_cliente;
+END;
+----------------------------------------------------------------
+
+
+b) Trigger en Clientes (cuando cambia el importe_base):
+CREATE TRIGGER Recalcular_importe_por_cliente
+ON Clientes
+AFTER UPDATE
+AS
+BEGIN
+    IF UPDATE(importe_base)
+    BEGIN
+        UPDATE f
+        SET f.importe_factura = 
+            (c.importe_base - (c.importe_base * f.tipo_descuento / 100.0))
+            * (1 + f.valor_iva / 100.0)
+        FROM Facturas f
+        INNER JOIN Clientes c ON f.codigo_cliente = c.codigo_cliente;
+    END
+
+
+
+******************************************************************************************
+				PUNTO 6:
+***********************************************************************************
+1.	Crear tabla Empleados_baja
+CREATE TABLE Empleados_baja (
+    dni_empleado CHAR(8) NOT NULL,
+    legajo INT NOT NULL,
+    cargo NVARCHAR(50) NOT NULL,
+    usuario NVARCHAR(50) NOT NULL,
+    fecha DATETIME NOT NULL
+);
+----------------------------------------------
+
+
+2. tRIGGER Empleado_eliminado
+CREATE TRIGGER Empleado_eliminado
+ON Empleados
+AFTER DELETE
+AS
+BEGIN
+    INSERT INTO Empleados_baja (dni_empleado, legajo, cargo, usuario, fecha)
+    SELECT 
+        d.dni_empleado,
+        d.legajo,
+        d.cargo,
+        SYSTEM_USER,    
+        GETDATE()       
+    FROM deleted d;
+END;
+--------------------------------------------
+
+
+3️. trigger Baja_usuario
+CREATE TRIGGER Baja_usuario
+ON Empleados
+AFTER DELETE
+AS
+BEGIN
+    DELETE u
+    FROM Usuarios u
+    INNER JOIN deleted d ON u.dni = d.dni_empleado;
+END;
+
