@@ -1,0 +1,53 @@
+Punto 4: 
+a) Tamaño de la relación
+aca tenemos que calcular el numero de registros por la longitud.
+Entonces para emplados seria: 3200 registros x 56 bytes, me da 179200 bytes
+
+En el caso de departamentos: 1500 registros x 130 bytes = 195000 bytes
+
+----------------------------------------------------------------------------------------------------
+b) Aca tenemos que hacer un inner join
+
+(Nombre y Apellido del empleado + Nombre del departamento) * tuplas relación Empleados 
+(25 bytes + 40 bytes) * 3200 tuplas = 208000 bytes
+
+I. Nodo 3 como nodo resultado
+Se pueden presentar tres opciones:
+ 		Opción 1
+	Transferimos el Nodo 1 y el Nodo 2 al Nodo 3:
+	179200 bytes + 195000 bytes = 374200 bytes transferidos
+
+	Opción 2
+Se proyecta el Nodo 1 al Nodo 2 y del Nodo 2 transferimos el resultado al Nodo 3:
+	179200 bytes + 208000 bytes = 387200 bytes transferidos
+
+	Opción 3
+Se transfiere el Nodo 2 al Nodo 1 y del Nodo 1 proyectamos el resultado al Nodo 3:
+	195000 bytes + 208000 bytes = 403000 bytes transferidos
+
+	De las opciones consideradas, la Opción 1 es la mejor.
+
+----------------------------------------------------------------------------------------
+II. Nodo 2 como nodo resultado
+Se pueden presentar dos opciones:
+Opción 1
+Se transfiere el Nodo 1 al Nodo 2: 179200 bytes transferidos
+
+	Opción 2
+Se transfiere el Nodo 2 al Nodo 1 y del Nodo 1 transferimos el resultado al Nodo 2:
+	195000 bytes + 208000 bytes = 403000 bytes transferidos
+
+	De las opciones evaluadas, la Opción 1 es la mejor.
+
+--------------------------------------------------------------------------------------------
+
+III. Consulta distribuida usando el tipo de semi reunión (semi join) respecto al ítem II
+Paso 1:
+Proyección de la columna de concatenación de la relación del Nodo 2 al Nodo 1, siendo: 
+Código de departamento (longitud) = 3 bytes * 1500 tuplas = 4500 bytes transferidos
+
+Paso 2:
+Proyección de las columnas necesarias para la obtención de la consulta distribuida, desde la relación del Nodo 1 al Nodo 2: Código de departamento + Nombre y Apellido del empleado.
+(3 bytes + 25 bytes) * 3200 tuplas = 89600 bytes transferidos
+
+El total transferido resulta: 4500 bytes + 89600 bytes = 94100 bytes transferidos.
